@@ -61,6 +61,7 @@ services:
     # --- ROUTAGE TRAEFIK ---
     labels:
       - "traefik.enable=true"
+      - "traefik.http.middlewares.baserow-proto-forward.headers.customrequestheaders.X-Forwarded-Proto=https"
       - "traefik.http.routers.baserow.rule=Host(`${BASEROW_DOMAIN}`)"
       - "traefik.http.routers.baserow.entrypoints=https"
       - "traefik.http.routers.baserow.tls=true"
