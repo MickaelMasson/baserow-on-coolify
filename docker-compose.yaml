@@ -1,0 +1,126 @@
+version: "3.4"
+
+services:
+  baserow:
+    container_name: baserow
+    image: baserow/baserow:${BASEROW_VERSION:-1.34.2}
+    restart: unless-stopped
+    environment:
+      # --- CONFIGURATION PRINCIPALE ---
+      BASEROW_PUBLIC_URL: https://${BASEROW_DOMAIN:?err_domain_missing}
+
+      # --- CONNEXION AUX SERVICES EXTERNES ---
+      DATABASE_HOST: db
+      DATABASE_NAME: ${DATABASE_NAME:-baserow}
+      DATABASE_USER: ${DATABASE_USER:-baserow}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?err_db_password_missing}
+      DATABASE_PORT: 5432
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?err_redis_password_missing}
+
+      # --- SECRETS & CLÉS ---
+      SECRET_KEY: ${SECRET_KEY:?err_secret_key_missing}
+      BASEROW_JWT_SIGNING_KEY: ${BASEROW_JWT_SIGNING_KEY:-}
+
+      # --- EMAILS ---
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-587}
+      EMAIL_SMTP_USE_TLS: ${EMAIL_SMTP_USE_TLS:-true}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@example.com}
+
+      # --- STOCKAGE S3 (Optionnel) ---
+      BASEROW_S3_ACCESS_KEY_ID: ${BASEROW_S3_ACCESS_KEY_ID:-}
+      BASEROW_S3_SECRET_ACCESS_KEY: ${BASEROW_S3_SECRET_ACCESS_KEY:-}
+      BASEROW_S3_BUCKET: ${BASEROW_S3_BUCKET:-}
+      BASEROW_S3_REGION: ${BASEROW_S3_REGION:-}
+      BASEROW_S3_ENDPOINT_URL: ${BASEROW_S3_ENDPOINT_URL:-}
+      BASEROW_S3_USE_PATH_STYLE_ENDPOINT: ${BASEROW_S3_USE_PATH_STYLE_ENDPOINT:-true}
+
+      # --- PERFORMANCE & DEBUG ---
+      BASEROW_AMOUNT_OF_WORKERS: ${BASEROW_AMOUNT_OF_WORKERS:-2}
+      BASEROW_BACKEND_DEBUG: ${BASEROW_BACKEND_DEBUG:-false}
+
+    volumes:
+      - baserow_media:/baserow/media
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - baserow_net
+      - coolify_proxy_network
+
+    # --- ROUTAGE TRAEFIK ---
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.baserow.rule=Host(`${BASEROW_DOMAIN}`)"
+      - "traefik.http.routers.baserow.entrypoints=https"
+      - "traefik.http.routers.baserow.tls=true"
+      - "traefik.http.routers.baserow.middlewares=coolify-redirect-to-https@docker"
+      - "traefik.http.services.baserow.loadbalancer.server.port=80"
+
+  # --- BASE DE DONNÉES ---
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-baserow}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?err_db_password_missing}
+      POSTGRES_DB: ${DATABASE_NAME:-baserow}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-baserow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - baserow_pgdata:/var/lib/postgresql/data
+    networks:
+      - baserow_net
+
+  # --- REDIS ---
+  redis:
+    image: redis:6
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:?err_redis_password_missing}
+    healthcheck:
+      # Note : Le healthcheck utilise la forme ["CMD"] (exec) pour la performance.
+      # ATTENTION : Le mot de passe (REDIS_PASSWORD) ne doit pas contenir de caractères
+      # interférant avec l'interpolation YAML ou Docker, notamment :
+      # - Le signe dollar ($) -> risque d'interprétation de variable
+      # - Les guillemets (" ou ') -> risque d'erreur de syntaxe
+      # - Le dièse (#) -> risque d'être vu comme un commentaire
+      # - L'antislash (\) -> risque d'échappement
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - baserow_net
+
+  # --- PERMISSIONS FIXER ---
+  volume-permissions-fixer:
+    image: bash:4.4
+    command: chown 9999:9999 -R /baserow/media
+    volumes:
+      - baserow_media:/baserow/media
+    restart: "no"
+    networks:
+      - baserow_net
+
+volumes:
+  baserow_pgdata:
+  baserow_media:
+
+networks:
+  baserow_net:
+    driver: bridge
+  coolify_proxy_network:
+    external: true
+    name: ${COOLIFY_PROXY_NETWORK:-coolify}
