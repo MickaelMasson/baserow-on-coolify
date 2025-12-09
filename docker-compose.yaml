@@ -51,8 +51,8 @@ services:
       - baserow_media:/baserow/media
 
     depends_on:
-      db:
-        condition: service_healthy
+#      db:
+#        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -71,22 +71,22 @@ services:
       - "traefik.http.services.baserow.loadbalancer.server.port=80"
 
   # --- BASE DE DONNÉES ---
-  db:
-    image: postgres:15
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DATABASE_USER:-baserow}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?err_db_password_missing}
-      POSTGRES_DB: ${DATABASE_NAME:-baserow}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-baserow}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - baserow_pgdata:/var/lib/postgresql/data
-    networks:
-      - baserow_net
+#  db:
+#    image: postgres:15
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_USER: ${DATABASE_USER:-baserow}
+#      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?err_db_password_missing}
+#      POSTGRES_DB: ${DATABASE_NAME:-baserow}
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-baserow}"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    volumes:
+#      - baserow_pgdata:/var/lib/postgresql/data
+#    networks:
+#      - baserow_net
 
   # --- REDIS ---
   redis:
@@ -119,7 +119,7 @@ services:
       - baserow_net
 
 volumes:
-  baserow_pgdata:
+#  baserow_pgdata:
   baserow_media:
 
 networks:
