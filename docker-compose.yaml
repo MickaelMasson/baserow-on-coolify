@@ -10,7 +10,7 @@ services:
       BASEROW_PUBLIC_URL: https://${BASEROW_DOMAIN:?err_domain_missing}
 
       # --- CONNEXION AUX SERVICES EXTERNES ---
-      DATABASE_HOST: db
+      DATABASE_HOST: ${DATABASE_HOST:-db}
       DATABASE_NAME: ${DATABASE_NAME:-baserow}
       DATABASE_USER: ${DATABASE_USER:-baserow}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?err_db_password_missing}
