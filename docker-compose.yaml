@@ -11,10 +11,10 @@ services:
 
       # --- CONNEXION AUX SERVICES EXTERNES ---
       DATABASE_HOST: ${DATABASE_HOST:-db}
-      DATABASE_NAME: ${DATABASE_NAME:-baserow}
-      DATABASE_USER: ${DATABASE_USER:-baserow}
+      DATABASE_NAME: ${DATABASE_NAME:-postgres}
+      DATABASE_USER: ${DATABASE_USER:-postgres}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?err_db_password_missing}
-      DATABASE_PORT: 5432
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
