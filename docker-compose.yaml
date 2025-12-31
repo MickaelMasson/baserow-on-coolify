@@ -8,6 +8,8 @@ services:
     environment:
       # --- CONFIGURATION PRINCIPALE ---
       BASEROW_PUBLIC_URL: https://${BASEROW_DOMAIN:?err_domain_missing}
+      # Force Caddy interne à écouter sur le port 80 sans SSL (Traefik gère le SSL)
+      BASEROW_CADDY_ADDRESS: ":80"
 
       # --- CONNEXION AUX SERVICES EXTERNES ---
       DATABASE_HOST: ${DATABASE_HOST:-db}
