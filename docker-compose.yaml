@@ -67,7 +67,7 @@ services:
       - "traefik.http.routers.baserow.rule=Host(`${BASEROW_DOMAIN}`)"
       - "traefik.http.routers.baserow.entrypoints=https"
       - "traefik.http.routers.baserow.tls=true"
-      - "traefik.http.routers.baserow.middlewares=coolify-redirect-to-https@docker"
+      - "traefik.http.routers.baserow.middlewares=coolify-redirect-to-https@docker,baserow-proto-forward"
       - "traefik.http.services.baserow.loadbalancer.server.port=80"
 
   # --- BASE DE DONNÉES ---
