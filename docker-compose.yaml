@@ -7,6 +7,7 @@ services:
     restart: unless-stopped
     environment:
       # --- CONFIGURATION PRINCIPALE ---
+      BASEROW_DOMAIN: ${BASEROW_DOMAIN:?err_BASEROW_DOMAIN_missing}
       BASEROW_PUBLIC_URL: https://${BASEROW_DOMAIN:?err_domain_missing}
       # Force Caddy interne à écouter sur le port 80 sans SSL (Traefik gère le SSL)
       BASEROW_CADDY_ADDRESS: ":80"
@@ -44,7 +45,7 @@ services:
       AWS_S3_CUSTOM_DOMAIN: ${AWS_S3_CUSTOM_DOMAIN:-}
 
       # --- PERFORMANCE & DEBUG ---
-      BASEROW_AMOUNT_OF_WORKERS: ${BASEROW_AMOUNT_OF_WORKERS:-2}
+      BASEROW_AMOUNT_OF_WORKERS: ${BASEROW_AMOUNT_OF_WORKERS:-5}
       BASEROW_BACKEND_DEBUG: ${BASEROW_BACKEND_DEBUG:-false}
       BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER: true
       DISABLE_VOLUME_CHECK: yes
